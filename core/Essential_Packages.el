@@ -5,8 +5,23 @@
 
 ;; Org-Roam Second Brain
 (use-package org-roam
+  :ensure t
   :init
-  (setq org-roam-v2-ack t))
+  (setq org-roam-v2-ack t)
+  :custom
+  (org-roam-directory (expand-file-name "Docs/PKB" emacs-parent-dir))
+  ;; I set emacs-parent-dir in my site-start.el, it sits over
+  ;; wherever I have my emacs install
+  (org-roam-completion-everywhere t)
+  :config
+  (org-roam-setup)
+)
+
+(setq org-roam-dailies-capture-templates
+      '(("d" "default" entry "* %<%H:%M>: %?"
+         :if-new (file+head "%<%Y%m%d_%a>.org" "#+title: %<%a %d %b %Y>\n"))))
+
+(setq org-roam-dailies-directory "CalendarNotes/")
 
 ;;; Misc
 ;; ======

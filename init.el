@@ -112,6 +112,11 @@
 (use-package straight
   :custom (straight-use-package-by-default t))
 
+;;; Per Environment Settings
+;; ==========================
+
+(defvar android (not(null(getenv "ANDROID_ROOT"))))
+
 ;;; Modular Directories
 ;; =====================
 
@@ -135,6 +140,13 @@
    (require 'main_look)
 ;   (require 'elegant_look)
 
+;; Misc
+;; ----
+(require 'personal)
+
+;; Env-dependant
+;; -------------
+(if android nil (require 'android-settings))
 
 ;;; Test Area
 ;; =========

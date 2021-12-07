@@ -2,6 +2,8 @@
 
 (provide 'personal)
 
+(setq user-mail-address "uhcglozano@gmail.com")
+
 ;;; RCIRC
 
 (setq rcirc-server-alist

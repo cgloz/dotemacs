@@ -7,9 +7,7 @@
 ;;; Look and Feel
 ;; ===============
 
-(window-divider-mode nil)
-
-
+(setq window-divider-mode nil)
 
 ;;; Elegant Modeline
 
@@ -67,7 +65,6 @@
   (set-frame-parameter (selected-frame) 'internal-border-width 10)
   (set-face-attribute 'fringe nil :background (face-background 'line-number)) 
   (set-face-attribute 'header-line nil :background (face-background 'line-number))  
-  (set-face-attribute 'vertical-border nil :foreground (face-background 'line-number))  
 ;;; defined custom variable line-bg with let and set it to line-number bg
 ;;    then I can use that to set box color properly (it creates issues when
 ;;    using set-face-attribute... (:box '(:color)" for whatever reason
@@ -75,7 +72,7 @@
 (custom-set-faces
  `(header-line ((t :box (:line-width
 			 5 :color ,line-bg) :background ,line-bg)))
- `(vertical-border ((t :background ,line-bg)))))
+ `(vertical-border ((t :background ,line-bg :foreground ,line-bg)))))
 )
 ;; function only seems to load right
 ;; if it loads after everything else
