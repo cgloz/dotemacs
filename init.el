@@ -1,6 +1,8 @@
+;; TODO IF In Windows, setenv HOME to HOMEPATH
 
 ;;; Personal Sanity Settings
 ;; ==========================
+
 
 ;; go straight to scratch buffer
 (setq inhibit-startup-message t)
@@ -55,6 +57,8 @@
 ;; User Function for finding init-file quicker
 
 (global-set-key (kbd "<M-f4>") 'save-buffers-kill-emacs)
+
+(global-set-key (kbd "C-c g") 'exit-minibuffer)
 
 ;; User Function for System Clipboard Copy
 (global-set-key (kbd "C-c w") #'copy-to-clipboard)
@@ -112,11 +116,6 @@
 (use-package straight
   :custom (straight-use-package-by-default t))
 
-;;; Per Environment Settings
-;; ==========================
-
-(defvar android (not(null(getenv "ANDROID_ROOT"))))
-
 ;;; Modular Directories
 ;; =====================
 
@@ -144,8 +143,23 @@
 ;; ----
 (require 'personal)
 
-;; Env-dependant
-;; -------------
+;;; Per Environment Settings
+;; ==========================
+
+(defvar android (not(null(getenv "ANDROID_ROOT"))))
+(defvar windows (string-equal system-type "windows-nt"))
+
+;; for magit to work on Windows the emacs environmental
+;;   variable "HOME" needs to be set to "HOMEPATH" on
+;;   Windows. This should be "C:\\Users\UserName\"
+;;   One of the reasons it might not be that is that
+;;   I use a custom site-start.el file to get my
+;;   dotemacs directory where I want it instead
+;;   of Appdata.
+(add-hook 'magit-mode-hook (lambda () (if windows (setenv "HOME" (getenv "HOMEPATH")))))
+
+;; modules
+;; -------
 (if android nil (require 'android-settings))
 
 ;;; Test Area
