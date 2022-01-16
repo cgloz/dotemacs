@@ -11,7 +11,7 @@
 (tool-bar-mode -1)              ;; disable the toolbar
 (tooltip-mode -1)               ;; Disable tooltips
 (menu-bar-mode -1)              ;; Disable Menubar
-;; (set-fringe-mode '(5 . 25))     ;; Create a light space on left and a lot of space on right
+(set-fringe-mode nil)             ;; Minimal Space for Indicators
 
 ;; maximized on start-up
 (add-hook 'emacs-startup-hook 'toggle-frame-fullscreen)
@@ -33,11 +33,14 @@
 ;; cursor settings
 (setq blink-cursor-delay 10)
 
+;; frame title (title on the OS Window)
+; (setq frame-title-format (list "%b - " (getenv "USERNAME") "@" (getenv "USERDOMAIN")))
+
 ;; Set-up Relative Line Numbers
 (defun line-mode-edits()
   (setq display-line-numbers-type 'absolute)
-  (set-face-attribute 'line-number nil :height 0.70)
-  (set-face-attribute 'line-number-current-line nil :height 0.70)
+  (set-face-attribute 'line-number nil :height 0.70 :inherit 'fixed-pitch)
+  (set-face-attribute 'line-number-current-line nil :height 0.70 :inherit 'fixed-pitch)
   (setq display-line-numbers-width 1))
 ;; function only seems to load right
 ;; if it loads after everything else
@@ -58,11 +61,20 @@
   (setq truncate-lines t)
   (setq line-spacing nil))
 (defun text-mode-settings()
+;  (variable-pitch-mode 1) ; non fixed-space
   (setq truncate-lines nil)
   (setq line-spacing 0.25))
 
 (add-hook 'prog-mode-hook 'prog-mode-settings)
 (add-hook 'text-mode-hook 'text-mode-settings)
+
+;; Sane Writing Helpers
+;; ---------------------
+
+;; automatic pairing of characters like "(" and quote
+(electric-pair-mode)
+(electric-quote-mode)
+;;---------------------
 
 ;; Desktop Save
 (setq desktop-path `("~" "~/DOCS/Desktop"))
@@ -92,6 +104,19 @@
 ;; accompanying keybinding
 (global-set-key (kbd "C-c I") #'find-user-init-file)
 
+;; New Frame With Scratch
+(defun new-frame-with-scratch ()
+  "Open a new frame with scratch buffer selected"
+  (interactive)
+  (let ((frame (make-frame))
+        (scratch-name "*temp*"))
+    (select-frame-set-input-focus frame)
+    (unless (get-buffer scratch-name)
+      (with-current-buffer (get-buffer-create scratch-name)
+        (org-mode)))
+    (switch-to-buffer scratch-name 'norecord)))
+(global-set-key (kbd "C-c S") #'new-frame-with-scratch)
+
 ;;; Start-Up
 ;; ==========
 
@@ -99,14 +124,14 @@
 ;; The default is 800 kilobytes.  Measured in bytes.
 (setq gc-cons-threshold (* 50 1000 1000))
 
-(defun cgloz/display-startup-time ()
+(defun my/display-startup-time ()
   (message "Emacs loaded in %s with %d garbage collections."
            (format "%.2f seconds"
                    (float-time
                      (time-subtract after-init-time before-init-time)))
            gcs-done))
 
-(add-hook 'emacs-startup-hook #'cgloz/display-startup-time)
+(add-hook 'emacs-startup-hook #'my/display-startup-time)
 
 
 ;;; Set-Up Straight + Use-Package
@@ -133,6 +158,14 @@
 ;; Configure use-package to use straight.el by default
 (use-package straight
   :custom (straight-use-package-by-default t))
+
+
+;;; very early update of org so that other packages work well
+;; ----------------------------------------------------------
+
+(use-package org
+  :demand t)
+
 
 ;;; Modular Directories
 ;; =====================
@@ -176,6 +209,9 @@
 ;;   of Appdata.
 (add-hook 'magit-mode-hook (lambda () (if windows (setenv "HOME" (getenv "HOMEPATH")))))
 
+;; do not display battery on android
+(if android t (display-battery-mode t))
+
 ;; modules
 ;; -------
 (if android nil (require 'android-settings))
@@ -188,6 +224,5 @@
 (use-package outshine
   :after outline)
 
+
 ;;; ----FIN----
-
-

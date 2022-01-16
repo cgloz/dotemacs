@@ -9,35 +9,58 @@
 
 (setq window-divider-mode nil)
 
-;;; Elegant Modeline
-
-(defun mode-line-render (left right)
-  "Function to render the modeline LEFT to RIGHT."
-  (concat (propertize " " 'display `(space :align-to (- left))) left
-          (propertize " " 'display `(space :align-to (- right ,(length right))))
-          right))
+(defun mode-line-render (left-text mid-text right-text)
+  "Function to render the modeline LEFT, CENTER and RIGHT."
+  ;; mode-line-render requires 3 "format-mode-line" calls, each will
+  ;;  be properly placed in the far left, middle, and right
+  (concat (propertize " " 'display `(space
+				     :align-to
+				     (- left)))
+	  left-text
+	  (propertize " " 'display `(space
+				     :align-to
+				     (- center ,(/ (length mid-text) 2))))
+	  mid-text
+	  (propertize " " 'display `(space
+				     :align-to (- right ,(length right-text))))
+	  right-text))
 (setq-default header-line-format
      '((:eval
        (mode-line-render
        (format-mode-line
        (if (and buffer-file-name (buffer-modified-p))
-             (propertize " %2*%b " 'face '(:foreground "red"))
-         " %2*%b "))
+             (propertize " %*%+ " 'face '(:foreground "red" :inherit bold))
+         (propertize " %*%+ " 'face 'bold)))
+       (format-mode-line (propertize "%b" 'face 'variable-pitch))
        (format-mode-line
-        (propertize "%l,%2c  %p%2%" 'face 'bold))))))
+        (propertize "%l,%2c  %p%%" 'face 'bold))))))
 ;; I added a space after "%2c" because in the terminal
 ;;   the line gets cut off on the right vertical border
 ;;   between windows
 
 ;;; visual packages
-(use-package nyan-mode)
-(use-package badwolf-theme)
+(use-package badwolf-theme
+  :disabled
+  :init
+    (load-theme 'badwolf t))
+(use-package green-phosphor-theme
+  :disabled
+  :init
+    (set-face-attribute 'line-number-current-line nil :weight 'bold :inverse-video t)
+    (set-face-attribute 'line-number nil :foreground "darkolivegreen" :background "#000D00")
+    (set-face-attribute 'fringe nil :foreground "darkolivegreen")
+    (load-theme 'green-phosphor t)
+:config
+    (defun clear-hl()
+      (set-face-attribute 'highlight nil :underline t :background nil :foreground nil))
+    (clear-hl)
+:hook (minibuffer-setup . clear-hl))
 ;; modus-themes
 ;; a dark and light accessibility theme
 ;; vivendi:dark::operandi:light
 (use-package modus-themes
 ;  :disabled
-	:init  
+  :init  
 	(load-theme 'modus-vivendi t)
 ;       (load-theme 'modus-operandi t)
 )
@@ -47,9 +70,12 @@
 ;; like a "writeroom" or "zen" modee
 (use-package olivetti
   :ensure t
+  :init
+;  (set-face-background 'olivetti-fringe (face-background 'line-number))
   :config
+  (set-face-background 'olivetti-fringe (face-background 'line-number))
   (setq olivetti-recall-visual-line-mode-entry-state t)
-  (setq olivetti-style t)
+  (setq olivetti-style nil)
   (setq olivetti-minimum-body-width 100)
   (setq olivetti-margin-width 1)
   (set-face-attribute 'olivetti-fringe nil  :background (face-background 'line-number))
@@ -80,21 +106,25 @@
 ;; if it loads after everything else
 (add-hook 'emacs-startup-hook 'clean-borders)
 
-
 ;;; Mini-Modeline
 ;; puts modeline in mini-buffer creating a sort
 ;;   of global modeline
 (use-package mini-modeline
-  :after modus-themes
+  :after (:any badwolf-theme modus-themes green-phosphor-theme)
   :init
-  (display-battery-mode t)
+  ;;(display-battery-mode t)
   (setq battery-mode-line-format "[%p]")
-  (set-face-attribute 'mode-line nil :box "unspecified" :extend t  :background (face-background 'line-number))
+  (set-face-attribute 'mode-line nil :box t :foreground nil :background (face-background 'line-number))
+  (set-face-attribute 'mode-line-inactive nil :box nil :underline nil :foreground nil :background nil)
   :config
   (mini-modeline-mode t)
-  (set-face-attribute 'mini-modeline-mode-line nil :height 0.4 :foreground nil :background (face-background 'line-number))
-  (set-face-attribute 'mini-modeline-mode-line-inactive nil :height 0.4 :foreground nil  :background (face-background 'line-number))
-  (setq mini-modeline-r-format (list
+(setq mode-line-format "%b") 
+   (set-face-attribute 'mini-modeline-mode-line nil :height 0.4 :background (face-background 'line-number))
+   (set-face-attribute 'mini-modeline-mode-line-inactive nil :height 0.4 :background (face-background 'line-number)) 
+   ;; display mode info on the left side
+   (setq mini-modeline-l-format mode-line-modes)
+   ;; display global info like day, time, battery on right
+   (setq mini-modeline-r-format (list
 			 "%e "
 		         '(:eval (propertize (format-time-string " %a") 'face 'bold)) " "
 		         '(:eval (propertize (format-time-string "%d %b %Y"))) " "
@@ -102,10 +132,28 @@
 		         '(:eval (propertize (format-time-string ":%M"))) " "
 		         '(:eval (propertize battery-mode-line-string))
 			 " "))
+   
+  ;; the real mode-line is shrunk in mini-modeline mode. Some modes
+  ;;   still use it, the function resizes it for those use-cases 
+   (defun mode-line-height-delta(new-height)
+     (set-face-attribute 'mini-modeline-mode-line nil
+			 :height new-height)
+     (set-face-attribute 'mini-modeline-mode-line-inactive nil
+			 :height new-height))
+
+(add-hook 'minibuffer-exit-hook (lambda()(mode-line-height-delta 0.4)))
+(add-hook 'eval-expression-minibuffer-setup-hook (lambda()( mode-line-height-delta 1.0)))
 )
+
 
 ;; Font Settings
 ;; -------------
+
+(defface variable-pitch-serif
+  '((t :family "serif" :foundry "outline"))
+  "The basic variable pitch face with serifs."
+  :group 'basic-faces
+  )
 
 (set-frame-font
  (cond
@@ -139,51 +187,75 @@
 ;; ORG Mode Settings
 ;; =================
 
+(use-package org-bullets
+  :hook (org-mode . org-bullets-mode)
+  :config
+  (setq org-bullets-bullet-list '(" ")))
+
+(use-package mixed-pitch
+  :hook (text-mode . mixed-pitch-mode)
+  :config
+  (setq mixed-pitch-fixed-pitch-faces (-union mixed-pitch-fixed-pitch-faces (list
+            'org-date
+            'org-footnote
+            'org-special-keyword
+	    'org-drawer
+            'org-property-value
+            'org-ref-cite-face
+            'org-tag
+            'org-todo-keyword-todo
+            'org-todo-keyword-habt
+            'org-todo-keyword-done
+            'org-todo-keyword-wait
+            'org-todo-keyword-kill
+            'org-todo-keyword-outd
+            'org-todos
+            'org-done
+	    'org-special-keyword
+            'font-lock-comment-face))))
+
 (defun cgloz/org-mode-setup ()
   (org-num-mode) ; auto-numbered headings
   (org-indent-mode) ; indent based on heading level
   (setq org-startup-indented t
         org-hide-leading-stars t)
- ;  (variable-pitch-mode 1) ; non fixed-space
   (visual-line-mode 1)
 ; (set-window-buffer nil (current-buffer))
 )
 
-(defun cgloz/org-font-setup ()
-   ;; Set faces for heading levels
-  (dolist (face '((org-document-title . 1.35)
-		  (org-level-1 . 1.5)
-                  (org-level-2 . 1.4)
-                  (org-level-3 . 1.35)
-                  (org-level-4 . 1.3)
-                  (org-level-5 . 1.25)
+ (defun cgloz/org-font-setup ()
+    ;; Set faces for heading levels
+   (dolist (face '((org-document-title . 1.75)
+ 		  (org-level-1 . 1.5)
+                   (org-level-2 . 1.4)
+                   (org-level-3 . 1.35)
+                   (org-level-4 . 1.3)
+                   (org-level-5 . 1.25)
 
-                  (org-level-6 . 1.25)
-                  (org-level-7 . 1.25)
-                  (org-level-8 . 1.1)
-		  (org-table . 0.75)))
-    (set-face-attribute (car face) nil :height (cdr face) :width 'expanded   :weight 'thin))
-    
-  ;; Ensure that anything that should be fixed-pitch in Org files appears that way
-  (set-face-attribute 'org-block nil    :foreground nil :inherit 'fixed-pitch)
-  (set-face-attribute 'org-table nil    :inherit 'fixed-pitch)
-  (set-face-attribute 'org-formula nil  :inherit 'fixed-pitch)
-  (set-face-attribute 'org-code nil     :inherit '(shadow fixed-pitch))
-  (set-face-attribute 'org-table nil    :inherit '(shadow fixed-pitch))
-  (set-face-attribute 'org-verbatim nil :inherit '(shadow fixed-pitch))
-  (set-face-attribute 'org-special-keyword nil :inherit '(font-lock-comment-face fixed-pitch))
-  (set-face-attribute 'org-meta-line nil :inherit '(font-lock-comment-face fixed-pitch))
-  (set-face-attribute 'org-checkbox nil  :inherit 'fixed-pitch)
-  (set-face-attribute 'line-number nil :inherit 'fixed-pitch)
-  (set-face-attribute 'line-number-current-line nil :inherit 'fixed-pitch))
+                   (org-level-6 . 1.25)
+                   (org-level-7 . 1.25)
+                   (org-level-8 . 1.1)
+ 		  (org-table . 0.75)))
+     (set-face-attribute (car face) nil :height (cdr face) :width 'normal :inherit 'variable-pitch-serif))
+  
+   ;; Ensure that anything that should be fixed-pitch in Org files appears that way
+
+    (set-face-attribute 'org-code nil     :inherit 'shadow)
+    (set-face-attribute 'org-table nil    :inherit 'shadow)
+    (set-face-attribute 'org-verbatim nil :inherit 'shadow)
+    (set-face-attribute 'org-special-keyword nil :inherit 'font-lock-comment-face)
+    (set-face-attribute 'org-meta-line nil :inherit 'font-lock-comment-face)
+ )
+
+
 
 (use-package org
   :commands (org-capture org-agenda)
   :hook (org-mode . cgloz/org-mode-setup)
   :config
   (setq org-ellipsis "...")
-  (custom-set-faces '(org-ellipsis ((t (:foreground "gray40" :underline nil)))))
-  (setq org-num-face '(:underline nil :width ultra-condensed :inherit 'variable-pitch))
+  (setq org-ellipsis '(:inherit (variable-pitch shadow) :underline nil))
+  (setq org-num-face '(:inherit variable-pitch-serif :weight bold))
   (setq org-agenda-start-with-log-mode t)
   (setq org-log-done 'time)
   (setq org-fontify-whole-heading-line t)
@@ -193,4 +265,5 @@
   (setq org-todo-keywords
     '((sequence "TODO(t)" "NEXT(n)" "|" "DONE(d!)")
       (sequence "BACKLOG(b)" "PLAN(p)" "READY(r)" "ACTIVE(a)" "REVIEW(v)" "WAIT(w@/!)" "HOLD(h)" "|" "COMPLETED(c)" "CANC(k@)")))
-  (cgloz/org-font-setup))
+ (cgloz/org-font-setup)
+  )

@@ -1,3 +1,10 @@
+(use-package general)
+
+
+;; ====================
+;;;       EVIL
+;; ====================
+
 (use-package evil
   :ensure t
   :init
@@ -8,17 +15,40 @@
   (setq evil-want-Y-yank-to-eol t)
   :config
   (evil-mode 1))
-(use-package evil-collection
-  :after evil
-  :config
-  (evil-collection-init))
 (use-package evil-nerd-commenter
   :bind ("M-/" . evilnc-comment-or-uncomment-lines))
   
 ;;; EVIL Sanity Adjustments
 ;; =========================
 
-(define-key evil-visual-state-map "C-x C-e" #'eval-region)
+;; force normal and emacs states
+(global-unset-key (kbd "C-\\"))
+(global-set-key (kbd "C-\\ C-n") 'evil-normal-state)
+(global-set-key (kbd "C-\\ C-e") 'evil-emacs-state)
+
+(define-key evil-insert-state-map (kbd "M-j") 'evil-next-line)
+(define-key evil-insert-state-map (kbd "M-k") 'evil-previous-line)
+(define-key evil-insert-state-map (kbd "M-h") 'evil-backward-char)
+(define-key evil-insert-state-map (kbd "M-l") 'evil-forward-char)
+
+(define-key evil-insert-state-map (kbd "M-v") 'evil-visual-char-state)
+
+(define-key evil-visual-state-map (kbd "C-c") #'copy-to-clipboard)
+(define-key evil-insert-state-map (kbd "C-v") #'paste-from-clipboard)
+
+
+(define-key evil-visual-state-map (kbd "C-x C-e") #'eval-region)
+
+(general-create-definer my-leader-def
+  ;; :prefix my-leader
+  ;; RET = Enter
+  :prefix "RET")
+
+(my-leader-def 'normal 'override
+  "a" 'org-agenda
+  "b" 'counsel-bookmark
+  "c" (kbd "C-x")
+  "RET" 'embark-dwim)
 
 ;; Disable SYSTEM Clipboard Integration
 ;; (Useful for Proper VIM Emulation in EVIL)
@@ -63,6 +93,8 @@
 (setq hscroll-margin 0
       hscroll-step 1)
 
+(setq evil-emacs-state-modes '())
+(setq evil-want-minibuffer t)
 ;; Org
 ;; ---
 

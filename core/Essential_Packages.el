@@ -1,20 +1,34 @@
 ;;; lang/org/autoload/org.el -*- lexical-binding: t; -*-
 
+;;; Org-Internal Packages
+;; =======================
+
+;; allows for snippet expansion (see org  structure template manual)
+;;  templates are execute for example "<s[tab]
+(require 'org-tempo)
+(require 'org-persist)
+(require 'org-element)
+
 ;;; Org-Roam
 ;; ==========
+
+(use-package emacsql-sqlite3
+  :ensure t)
 
 ;; Org-Roam Second Brain
 (use-package org-roam
   :ensure t
+  :demand t  ;; Ensure org-roam is loaded by default
   :init
   (setq org-roam-v2-ack t)
   :custom
-  (org-roam-directory (expand-file-name "Docs/PKB" emacs-parent-dir))
+  (org-roam-directory (file-truename (expand-file-name "Docs/PKB" emacs-parent-dir)))
   ;; I set emacs-parent-dir in my site-start.el, it sits over
   ;; wherever I have my emacs install
   (org-roam-completion-everywhere t)
   :config
-  (org-roam-setup)
+;  (setq org-roam-database-connector 'sqlite3)
+  (org-roam-db-autosync-mode)
 )
 
 (setq org-roam-dailies-capture-templates
@@ -25,6 +39,9 @@
 
 ;;; Misc
 ;; ======
+
+;; speed read
+(use-package spray)
 
 ;; launches apps from emacs
 (use-package app-launcher
@@ -39,6 +56,8 @@
 (use-package magit
   :ensure t)
 
+;; Font-Lock Debugger
+(use-package font-lock-studio)
 
 ;;; Completion System
 ;; ===================
