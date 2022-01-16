@@ -87,7 +87,7 @@
 (use-package mini-modeline
   :after modus-themes
   :init
-  (display-battery-mode t)
+  ;;(display-battery-mode t)
   (setq battery-mode-line-format "[%p]")
   (set-face-attribute 'mode-line nil :box "unspecified" :extend t  :background (face-background 'line-number))
   :config

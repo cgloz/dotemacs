@@ -176,6 +176,9 @@
 ;;   of Appdata.
 (add-hook 'magit-mode-hook (lambda () (if windows (setenv "HOME" (getenv "HOMEPATH")))))
 
+;; do not display battery on android
+(if android t (display-battery-mode t))
+
 ;; modules
 ;; -------
 (if android nil (require 'android-settings))
