@@ -19,12 +19,12 @@
 (setq-default header-line-format
      '((:eval
        (mode-line-render
-       (format-mode-line (list
-         " %b "
-         (if (and buffer-file-name (buffer-modified-p))
-             (propertize "(modified)" 'face 'italic))))
        (format-mode-line
-        (propertize "%4l:%2c " 'face 'bold))))))
+       (if (and buffer-file-name (buffer-modified-p))
+             (propertize " %2*%b " 'face '(:foreground "red"))
+         " %2*%b "))
+       (format-mode-line
+        (propertize "%l,%2c  %p%2%" 'face 'bold))))))
 ;; I added a space after "%2c" because in the terminal
 ;;   the line gets cut off on the right vertical border
 ;;   between windows
@@ -39,7 +39,7 @@
 ;  :disabled
 	:init  
 	(load-theme 'modus-vivendi t)
-;        (load-theme 'modus-operandi t)
+;       (load-theme 'modus-operandi t)
 )
 
 ;;; Olivetti
@@ -59,12 +59,14 @@
 ;;;### autoload
 (defun clean-borders()
   "make a clean border the same color as the line number background"
-  (setq left-margin-width 8)
-  (setq right-margin-width 8)
+  
+  (setq left-margin-width 1)
+  (setq right-margin-width 5)
   (set-face-background 'internal-border (face-background 'line-number) (selected-frame))
-  (set-frame-parameter (selected-frame) 'internal-border-width 10)
+  (set-frame-parameter (selected-frame) 'internal-border-width 3)
   (set-face-attribute 'fringe nil :background (face-background 'line-number)) 
   (set-face-attribute 'header-line nil :background (face-background 'line-number))  
+  (set-face-attribute 'line-number-current-line nil :background (face-background 'default))  
 ;;; defined custom variable line-bg with let and set it to line-number bg
 ;;    then I can use that to set box color properly (it creates issues when
 ;;    using set-face-attribute... (:box '(:color)" for whatever reason
@@ -93,6 +95,7 @@
   (set-face-attribute 'mini-modeline-mode-line nil :height 0.4 :foreground nil :background (face-background 'line-number))
   (set-face-attribute 'mini-modeline-mode-line-inactive nil :height 0.4 :foreground nil  :background (face-background 'line-number))
   (setq mini-modeline-r-format (list
+			 "%e "
 		         '(:eval (propertize (format-time-string " %a") 'face 'bold)) " "
 		         '(:eval (propertize (format-time-string "%d %b %Y"))) " "
 		         '(:eval (propertize (format-time-string "%H") 'face 'bold))
@@ -178,7 +181,7 @@
   :commands (org-capture org-agenda)
   :hook (org-mode . cgloz/org-mode-setup)
   :config
-  (setq org-ellipsis "…")
+  (setq org-ellipsis "...")
   (custom-set-faces '(org-ellipsis ((t (:foreground "gray40" :underline nil)))))
   (setq org-num-face '(:underline nil :width ultra-condensed :inherit 'variable-pitch))
   (setq org-agenda-start-with-log-mode t)
@@ -191,5 +194,3 @@
     '((sequence "TODO(t)" "NEXT(n)" "|" "DONE(d!)")
       (sequence "BACKLOG(b)" "PLAN(p)" "READY(r)" "ACTIVE(a)" "REVIEW(v)" "WAIT(w@/!)" "HOLD(h)" "|" "COMPLETED(c)" "CANC(k@)")))
   (cgloz/org-font-setup))
-
-

@@ -11,14 +11,14 @@
 (tool-bar-mode -1)              ;; disable the toolbar
 (tooltip-mode -1)               ;; Disable tooltips
 (menu-bar-mode -1)              ;; Disable Menubar
-(set-fringe-mode '(5 . 25))     ;; Create a light space on left and a lot of space on right
+;; (set-fringe-mode '(5 . 25))     ;; Create a light space on left and a lot of space on right
 
 ;; maximized on start-up
-(toggle-frame-maximized)
+(add-hook 'emacs-startup-hook 'toggle-frame-fullscreen)
+;;(toggle-frame-fullscreen)
 
-;; minor transparency while focused (99) and notable
-;;    tranparency when unfocused (85)
-(add-to-list 'default-frame-alist '(alpha . (99 . 85)))
+;; tranparency when unfocused (75)
+(add-to-list 'default-frame-alist '(alpha . (100 . 75)))
 
 (setq word-wap t)
 
@@ -34,9 +34,24 @@
 (setq blink-cursor-delay 10)
 
 ;; Set-up Relative Line Numbers
-(global-display-line-numbers-mode)
-(setq display-line-numbers-type 'relative)
-(set-face-attribute 'line-number nil :height 0.70)
+(defun line-mode-edits()
+  (setq display-line-numbers-type 'absolute)
+  (set-face-attribute 'line-number nil :height 0.70)
+  (set-face-attribute 'line-number-current-line nil :height 0.70)
+  (setq display-line-numbers-width 1))
+;; function only seems to load right
+;; if it loads after everything else
+(add-hook 'emacs-startup-hook 'line-mode-edits)
+
+;; this code allows it so that only the active window has line numbers displayed
+(defun line-numbers-selected-window ()
+  "Highlight selected window with a different background color."
+  (walk-windows (lambda (w)
+                  (unless (eq w (selected-window))
+                    (with-current-buffer (window-buffer w)
+                     (setq display-line-numbers nil)))))
+  (setq display-line-numbers 'relative))
+(add-hook 'buffer-list-update-hook 'line-numbers-selected-window)
 
 ;; set up spacing and wrapping for text-mode, not prog
 (defun prog-mode-settings()
@@ -48,6 +63,9 @@
 
 (add-hook 'prog-mode-hook 'prog-mode-settings)
 (add-hook 'text-mode-hook 'text-mode-settings)
+
+;; Desktop Save
+(setq desktop-path `("~" "~/DOCS/Desktop"))
 
 ;; Sane Keybindings
 ;;-------------------
@@ -70,7 +88,7 @@
 (defun find-user-init-file ()
   "Edit the `user-init-file', in another window."
   (interactive)
-  (find-file-other-window user-init-file))
+  (find-file-other-frame user-init-file))
 ;; accompanying keybinding
 (global-set-key (kbd "C-c I") #'find-user-init-file)
 
@@ -163,7 +181,7 @@
 (if android nil (require 'android-settings))
 
 ;;; Test Area
-;; =========
+;; ===========
 
 (use-package foldout
   :after outline)
