@@ -1,7 +1,3 @@
-;; TODO IF In Windows, setenv HOME to HOMEPATH
-
-;;; Personal Sanity Settings
-;; ==========================
 
 
 ;; go straight to scratch buffer
@@ -33,18 +29,21 @@
 ;; cursor settings
 (setq blink-cursor-delay 10)
 
+(set-face-attribute 'default nil :height 160)
+
 ;; frame title (title on the OS Window)
 ; (setq frame-title-format (list "%b - " (getenv "USERNAME") "@" (getenv "USERDOMAIN")))
 
-;; Set-up Relative Line Numbers
-(defun line-mode-edits()
+(defun start-up-tweaks()
+  (set-face-attribute 'default nil :height 150)
+  ;; Set-up Relative Line Numbers
   (setq display-line-numbers-type 'absolute)
   (set-face-attribute 'line-number nil :height 0.70 :inherit 'fixed-pitch)
   (set-face-attribute 'line-number-current-line nil :height 0.70 :inherit 'fixed-pitch)
   (setq display-line-numbers-width 1))
 ;; function only seems to load right
 ;; if it loads after everything else
-(add-hook 'emacs-startup-hook 'line-mode-edits)
+(add-hook 'emacs-startup-hook 'start-up-tweaks)
 
 ;; this code allows it so that only the active window has line numbers displayed
 (defun line-numbers-selected-window ()
@@ -76,6 +75,10 @@
 (electric-quote-mode)
 ;;---------------------
 
+;; Navigation
+(winner-mode)
+;; manages buffer layout history
+
 ;; Desktop Save
 (setq desktop-path `("~" "~/DOCS/Desktop"))
 
@@ -100,7 +103,7 @@
 (defun find-user-init-file ()
   "Edit the `user-init-file', in another window."
   (interactive)
-  (find-file-other-frame user-init-file))
+  (find-file-other-tab user-init-file))
 ;; accompanying keybinding
 (global-set-key (kbd "C-c I") #'find-user-init-file)
 
@@ -187,8 +190,9 @@
 ;; Look at Feel
 ;; ------------
 ;; only uncomment one
-   (require 'main_look)
+;   (require 'main_look)
 ;   (require 'elegant_look)
+   (require 'new_look)
 
 ;; Misc
 ;; ----
@@ -224,5 +228,37 @@
 (use-package outshine
   :after outline)
 
+(use-package zoom
+  :config
+  (custom-set-variables '(zoom-mode t))
+  (custom-set-variables
+   '(zoom-size '(0.618 . 0.618)))
+  )
+
+(use-package avy
+  :config
+  (setq avy-all-windows t
+      avy-background t
+      avy-style 'de-bruijn
+      ;; the unpredictability of this (when enabled) makes it a poor default
+      avy-single-candidate-jump nil)
+  :bind ("C-s" . avy-goto-char-timer))
+
+(use-package link-hint
+  :ensure t
+  :bind
+  ("C-M-s" . link-hint-open-link)
+  ("M-s c" . link-hint-copy-link)
+  :config
+  (setq browse-url-browser-function 'browse-url-firefox)
+  ;; fallback to embark
+  (setq link-hint-action-fallback-commands
+      (list :open (lambda ()
+                    (condition-case _
+                        (progn
+                          (embark-dwim)
+                          t)
+                      (error
+                       nil))))))
 
 ;;; ----FIN----

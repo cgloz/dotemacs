@@ -39,6 +39,8 @@
 
 (define-key evil-visual-state-map (kbd "C-x C-e") #'eval-region)
 
+(define-key evil-motion-state-map (kbd "<SPC>") #'ignore) 
+
 (general-create-definer my-leader-def
   ;; :prefix my-leader
   ;; RET = Enter
@@ -102,8 +104,8 @@
 (global-set-key (kbd "C-c a") 'org-agenda)
 (global-set-key (kbd "C-c c") 'org-capture)
 ;; Sensible Evil bindings courtesy of DOOM
- (define-key evil-normal-state-map "]h" 'outline-forward-same-level)
- (define-key evil-normal-state-map "[h" 'outline-backward-same-level)
+(define-key evil-normal-state-map "]h" 'outline-forward-same-level)
+(define-key evil-normal-state-map "[h" 'outline-backward-same-level)
 (define-key evil-normal-state-map "]l" 'org-next-link)
 (define-key evil-normal-state-map "[l" 'org-previous-link)
 (define-key evil-normal-state-map "]c" 'org-babel-next-src-block)

@@ -1,7 +1,108 @@
 ;;; lang/org/autoload/org.el -*- lexical-binding: t; -*-
 
-;;; Org-Internal Packages
+;;; Org-Setup
 ;; =======================
+
+
+  ;; HACK Face specs fed directly to `org-todo-keyword-faces' don't respect
+  ;;      underlying faces like the `org-todo' face does, so we define our own
+  ;;      intermediary faces that extend from org-todo.
+(defun my/org-todo-setup ()
+  (with-no-warnings
+    (custom-declare-face '+org-todo-active  '((t (:inherit (bold font-lock-constant-face org-todo)))) "")
+    (custom-declare-face '+org-todo-special '((t (:inherit (bold font-lock-doc-face org-todo)))) "")
+    (custom-declare-face '+org-todo-onhold  '((t (:inherit (bold warning org-todo)))) "")
+    (custom-declare-face '+org-todo-warning '((t (:inherit (bold error org-todo)))) ""))
+  (setq org-todo-keywords
+	;; @ = leave note and timestamp ! = Timestamp
+	;; /@ /! allow for note/stamp on LEAVING status
+        '((sequence      ; --GENERAL ITEMS--
+           "TODO(t)"     ; A task that needs doing & is ready to do
+           "ACTV(a)"     ; A task that is in progress
+           "WAIT(w@/!)"  ; Something external is holding up this task
+           "PEND(p@)"    ; This task is paused/on hold because of me
+	   "ASAP(s@)"    ; needs immediate attention
+           "|"
+           "DONE(d!)"    ; Task successfully completed
+           "KILL(k!)")   ; Task was cancelled, aborted or is no longer applicable
+	  (sequence      ; --SPECIAL TYPES OF TASKS--
+           "PROJ(j@)"    ; A project, which usually contains other tasks
+           "RCUR(r)"     ; A recurring task
+           "IDEA(i)"     ; An unconfirmed and unapproved task or notion
+	   "BRNR(b)"     ; Task fell on the back-burner
+	   "PERP(P)"     ; Perpetual, work on it whenever
+	   "REVU(R)"     ; Review details of task (usually in post)
+	   )
+          (sequence      ; --CHECKBOXES--
+           "[ ](T)"      ; A task that needs doing
+           "[-](-)"      ; Task is in progress
+           "[?](?)"      ; Task is being held up or paused
+	   "[*](*)"      ; requires action on my part
+	   "[!](S)"      ; immediate attention
+           "|"
+           "[X](X)")     ; Task was completed
+	  (sequence      ;--PROSPECTING--
+	   "COLD(c)"     ; cold prospect
+	   "ATMPT(>)"    ; attempted: started trying to engage
+	   "FOLUP(f@/!)" ; Follow-up at later date
+	   "REJCT(R@/!)" ; Response, not now or soft rejection
+	   "MEET(M@/@)"  ; meeting booked
+	   "|"
+	   "DISQ(D@/@)"  ; diqualified: not a fit
+	   "REFRL(o@)"   ; referred to other contact
+	   "OPPT(O@)"    ; opportunity created
+           "LOST(l@/!)") ; Lost to competitor
+	  (sequence      ;--SALES--
+	   "DISC(d!)"    ; Discovery phase
+	   "RECO(e/@)"   ; Recommendation made
+	   "DARK(D!/@)"  ; opp went dark
+	   "NEGO(N!/@)"    ; Negotioate
+	   "|"
+	   "WON(w@)"     ; Close-Won
+	   "LOST(l@/!)"  ; lost
+	   ))
+        org-todo-keyword-faces
+        '(("ACTV"  . +org-todo-active)
+	  ("[-]"   . +org-todo-active)
+	  ("ATMPT" . +org-todo-active)
+	  ("MEET"  . +org-todo-active)
+          ("WAIT"  . +org-todo-onhold)
+          ("PEND"  . +org-todo-onhold)
+          ("[?]"   . +org-todo-onhold)
+          ("[*]"   . +org-todo-onhold)
+          ("FOLUP" . +org-todo-onhold)
+          ("NURTR" . +org-todo-onhold)
+          ("DARK"  . +org-todo-onhold)
+          ("PROJ"  . +org-todo-special)
+	  ("RCUR"  . +org-todo-special)  
+          ("IDEA"  . +org-todo-special)
+ 	  ("BRNR"  . +org-todo-special)
+ 	  ("PERP"  . +org-todo-special)
+ 	  ("REVU"  . +org-todo-special)
+ 	  ("ASAP"  . +org-todo-warning)
+ 	  ("KILL"  . +org-todo-warning)
+ 	  ("[!]"   . +org-todo-warning)
+ 	  ("DISQ"  . +org-todo-warning)
+ 	  ("LOST"  . +org-todo-warning)))
+  (setq org-priority-highest  1
+	org-priority-lowest   10
+	org-priority-default  5))
+(defun my/org-mode-setup ()
+  (org-num-mode) ; auto-numbered headings
+  (org-indent-mode) ; indent based on heading level
+  (visual-line-mode 1)
+  (setq org-startup-indented t
+	org-list-allow-alphabetical t ; ex. a. b. lists
+        org-hide-leading-stars t ; for headings
+	)
+  (setq org-log-into-drawer t
+        org-log-done 'time
+	org-agenda-start-with-log-mode t)
+)
+(use-package org
+  :hook (org-mode . my/org-mode-setup)
+  :config
+  (my/org-todo-setup))
 
 ;; allows for snippet expansion (see org  structure template manual)
 ;;  templates are execute for example "<s[tab]

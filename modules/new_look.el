@@ -2,7 +2,7 @@
 
 ;; Modules need to provide the variable
 ;;   that will be (required) in the init
-(provide 'main_look)
+(provide 'new_look)
 
 ;;; Look and Feel
 ;; ===============
@@ -24,37 +24,44 @@
 	  (propertize " " 'display `(space
 				     :align-to (- right ,(length right-text))))
 	  right-text))
-(setq-default header-line-format
-     '((:eval
+
+(setq-default mode-line-format
+	      '((:eval
        (mode-line-render
        (format-mode-line
        (if (and buffer-file-name (buffer-modified-p))
-             (propertize " %*%+ " 'face '(:foreground "red" :inherit bold))
-         (propertize " %*%+ " 'face 'bold)))
-       (format-mode-line (propertize "%b" 'face 'variable-pitch))
+             (propertize "%*%+ " 'face '(:background "red" :inherit bold))
+         (propertize "%*%+ " 'face 'bold)))
+       (format-mode-line (propertize "  %b  " 'face '(:inherit variable-pitch)))
        (format-mode-line
-        (propertize "%l,%2c  %p%%" 'face 'bold))))))
-;; I added a space after "%2c" because in the terminal
-;;   the line gets cut off on the right vertical border
-;;   between windows
+        (propertize (concat "%l,%2c   " (substring (format-mode-line "%p") 0 3) "%2%%%") 'face 'bold)
+)))))
+;; working on getting the % section to shorten "Bottom to Bot" mode-line-position
 
-;;; visual packages
-(use-package badwolf-theme
-  :disabled
-  :init
-    (load-theme 'badwolf t))
-(use-package green-phosphor-theme
-  :disabled
-  :init
-    (set-face-attribute 'line-number-current-line nil :weight 'bold :inverse-video t)
-    (set-face-attribute 'line-number nil :foreground "darkolivegreen" :background "#000D00")
-    (set-face-attribute 'fringe nil :foreground "darkolivegreen")
-    (load-theme 'green-phosphor t)
-:config
-    (defun clear-hl()
-      (set-face-attribute 'highlight nil :underline t :background nil :foreground nil))
-    (clear-hl)
-:hook (minibuffer-setup . clear-hl))
+(window-divider-mode)
+(setq window-divider-default-right-width 5)
+
+;;;### autoload
+(defun clean-borders()
+  "make a clean border the same color as the line number background"
+  (set-frame-parameter (selected-frame) 'internal-border-width 3)
+  (set-face-attribute 'mode-line nil :height .75 :inverse-video t :box nil :background (face-background 'default)) 
+  (set-face-attribute 'mode-line-inactive nil :height .75 :inverse-video t :box nil :background (face-background 'default))
+  (set-face-attribute 'line-number nil :background (face-background 'default))
+  (set-face-attribute 'line-number-current-line nil :inverse-video t)
+  (set-face-attribute 'fringe nil :background nil)
+  ;; setup for window dividers
+  (set-face-foreground 'window-divider (face-background 'default))
+  (set-face-foreground 'window-divider-first-pixel (face-foreground 'default))
+  (set-face-foreground 'window-divider-last-pixel (face-foreground 'default))
+  ;;vertical border for terminal emacs
+  ;;Reverse colors for the border to have nicer line  
+  (set-face-inverse-video-p 'vertical-border nil)
+  (set-face-background 'vertical-border (face-background 'default))) 
+(add-hook 'emacs-startup-hook 'clean-borders)
+
+;;; Color-Themes
+
 ;; modus-themes
 ;; a dark and light accessibility theme
 ;; vivendi:dark::operandi:light
@@ -65,6 +72,8 @@
 ;       (load-theme 'modus-operandi t)
 )
 
+;;; visual packages
+
 ;;; Olivetti
 ;; Olivetti cleans up fringes and centers text
 ;; like a "writeroom" or "zen" modee
@@ -73,77 +82,11 @@
   :init
 ;  (set-face-background 'olivetti-fringe (face-background 'line-number))
   :config
-  (set-face-background 'olivetti-fringe (face-background 'line-number))
   (setq olivetti-recall-visual-line-mode-entry-state t)
   (setq olivetti-style nil)
   (setq olivetti-minimum-body-width 100)
   (setq olivetti-margin-width 1)
-  (set-face-attribute 'olivetti-fringe nil  :background (face-background 'line-number))
   :hook (text-mode . olivetti-mode))
-
-
-;;;### autoload
-(defun clean-borders()
-  "make a clean border the same color as the line number background"
-  
-  (setq left-margin-width 1)
-  (setq right-margin-width 5)
-  (set-face-background 'internal-border (face-background 'line-number) (selected-frame))
-  (set-frame-parameter (selected-frame) 'internal-border-width 3)
-  (set-face-attribute 'fringe nil :background (face-background 'line-number)) 
-  (set-face-attribute 'header-line nil :background (face-background 'line-number))  
-  (set-face-attribute 'line-number-current-line nil :background (face-background 'default))  
-;;; defined custom variable line-bg with let and set it to line-number bg
-;;    then I can use that to set box color properly (it creates issues when
-;;    using set-face-attribute... (:box '(:color)" for whatever reason
-(let ((line-bg (face-attribute 'line-number :background)))
-(custom-set-faces
- `(header-line ((t :box (:line-width
-			 5 :color ,line-bg) :background ,line-bg)))
- `(vertical-border ((t :background ,line-bg :foreground ,line-bg)))))
-)
-;; function only seems to load right
-;; if it loads after everything else
-(add-hook 'emacs-startup-hook 'clean-borders)
-
-;;; Mini-Modeline
-;; puts modeline in mini-buffer creating a sort
-;;   of global modeline
-(use-package mini-modeline
-  :after (:any badwolf-theme modus-themes green-phosphor-theme)
-  :init
-  ;;(display-battery-mode t)
-  (setq battery-mode-line-format "[%p]")
-  (set-face-attribute 'mode-line nil :box t :foreground nil :background (face-background 'line-number))
-  (set-face-attribute 'mode-line-inactive nil :box nil :underline nil :foreground nil :background nil)
-  :config
-  (mini-modeline-mode t)
-(setq mode-line-format "%b") 
-   (set-face-attribute 'mini-modeline-mode-line nil :height 0.4 :background (face-background 'line-number))
-   (set-face-attribute 'mini-modeline-mode-line-inactive nil :height 0.4 :background (face-background 'line-number)) 
-   ;; display mode info on the left side
-   (setq mini-modeline-l-format mode-line-modes)
-   ;; display global info like day, time, battery on right
-   (setq mini-modeline-r-format (list
-			 "%e "
-		         '(:eval (propertize (format-time-string " %a") 'face 'bold)) " "
-		         '(:eval (propertize (format-time-string "%d %b %Y"))) " "
-		         '(:eval (propertize (format-time-string "%H") 'face 'bold))
-		         '(:eval (propertize (format-time-string ":%M"))) " "
-		         '(:eval (propertize battery-mode-line-string))
-			 " "))
-   
-  ;; the real mode-line is shrunk in mini-modeline mode. Some modes
-  ;;   still use it, the function resizes it for those use-cases 
-   (defun mode-line-height-delta(new-height)
-     (set-face-attribute 'mini-modeline-mode-line nil
-			 :height new-height)
-     (set-face-attribute 'mini-modeline-mode-line-inactive nil
-			 :height new-height))
-
-(add-hook 'minibuffer-exit-hook (lambda()(mode-line-height-delta 0.4)))
-(add-hook 'eval-expression-minibuffer-setup-hook (lambda()( mode-line-height-delta 1.0)))
-)
 
 
 ;; Font Settings
@@ -154,17 +97,6 @@
   "The basic variable pitch face with serifs."
   :group 'basic-faces
   )
-
-(set-frame-font
- (cond
-  ((string-equal system-type "windows-nt")
-   (if (member "Consolas" (font-family-list)) "Consolas" nil ))
-  ((string-equal system-type "darwin")
-   (if (member "Menlo" (font-family-list)) "Menlo-16" nil ))
-  ((string-equal system-type "gnu/linux")
-   (if (member "DejaVu Sans Mono" (font-family-list)) "DejaVu Sans Mono" nil ))
-  (t nil))
- t t)
 
 ;; set font for emoji
 (set-fontset-font
@@ -257,3 +189,39 @@
   (setq org-fontify-quote-and-verse-blocks t)
   (cgloz/org-font-setup)
 )
+
+;  TEST AREA
+; ===========
+
+;;; The package I used to get info displaying in the echo area
+;; in the actual file I made a change,
+;; I removed (setq-default mode-line-format nil)
+;; so that I could keep my mode-line
+(straight-use-package
+ '(xfel-mode-line :type git :host github :repo "fernando-jascovich/xfel-mode-line")
+ )
+(require 'xfel-mode-line)
+(xfel-mode-line-mode 1)
+ (defun test-format (left-text right-text)
+  (concat (propertize " " 'display `(space
+				     :align-to
+				     (- left)))
+	  left-text
+	  (propertize " " 'display `(space
+				     :align-to (- right ,(length right-text))))
+	  right-text)
+  )
+
+
+(setq battery-mode-line-format "[%p]")
+(defun xfel-render ()
+  	      (format-mode-line '((:eval
+       (mode-line-render
+       (format-mode-line
+       mode-line-modes)
+       " "
+       (concat (format-time-string
+       "%a %d %b %Y %H:%M " ) battery-mode-line-string " "))))))
+
+
+(setq xfel-mode-line-format-function #'xfel-render)
